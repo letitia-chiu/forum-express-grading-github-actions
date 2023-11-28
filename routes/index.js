@@ -18,7 +18,7 @@ router.post('/signup', userController.signUp)
 router.get('/signin', userController.signInPage)
 router.post('/signin', passport.authenticate('local', { failureRedirect: '/signin', failureFlash: true }), userController.signIn)
 
-router.post('/logout', userController.logout)
+router.get('/logout', userController.logout)
 
 router.get('/restaurants', restController.getRestaurants)
 router.use('/', (req, res) => res.redirect('/restaurants'))

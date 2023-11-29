@@ -5,3 +5,5 @@ upload/
 .DS_Store
 .env
 .idea
+
+.nvmrc

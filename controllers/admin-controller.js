@@ -5,7 +5,9 @@ const adminController = {
     Restaurant.findAll({
       raw: true
     })
-      .then(restaurants => res.render('admin/restaurants', { restaurants }))
+      .then(restaurants => {
+        return res.render('admin/restaurants', { restaurants })
+      })
       .catch(err => next(err))
   },
   createRestaurant: (req, res) => {
@@ -24,6 +26,17 @@ const adminController = {
       .then(() => {
         req.flash('success_messages', 'restaurant was successfully created!')
         res.redirect('/admin/restaurants')
+      })
+      .catch(err => next(err))
+  },
+  getRestaurant: (req, res, next) => {
+    Restaurant.findByPk(req.params.id, {
+      raw: true
+    })
+      .then(restaurant => {
+        if (!restaurant) throw new Error("Restaurant didn't exist!")
+
+        res.render('admin/restaurant', { restaurant })
       })
       .catch(err => next(err))
   }

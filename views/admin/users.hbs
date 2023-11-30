@@ -1,0 +1,31 @@
+{{> admin-page-tab}}
+
+<table class="table align-middle">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Name</th>
+      <th scope="col">Email</th>
+      <th scope="col">Role</th>
+      <th scope="col">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each users}}
+    <tr>
+      <th scope="row">{{this.id}}</th>
+      <td>{{this.name}}</td>
+      <td>{{this.email}}</td>
+      <td>{{#if this.isAdmin}}admin{{else}}user{{/if}}</td>
+      <td>
+        <form action="/admin/users/{{this.id}}?_method=PATCH" method="POST" style="display: inline;">
+          <input type="hidden" name="isAdmin">
+          <button type="submit" class="btn btn-link" onclick="return confirm(`確定要將 {{ this.name }} 的權限更改為 {{#if this.isAdmin}}user{{else}}admin{{/if}} 嗎？`)">
+            {{#if this.isAdmin}}set as user{{else}}set as admin{{/if}}
+          </button>
+        </form>
+      </td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>

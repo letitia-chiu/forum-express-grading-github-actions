@@ -55,7 +55,11 @@ const adminController = {
   },
   editRestaurant: (req, res, next) => {
     Promise.all([
-      Restaurant.findByPk(req.params.id, { raw: true }),
+      Restaurant.findByPk(req.params.id, {
+        raw: true,
+        nest: true,
+        include: [Category]
+      }),
       Category.findAll({ raw: true })
     ])
       .then(([restaurant, categories]) => {

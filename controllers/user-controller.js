@@ -40,6 +40,8 @@ const userController = {
   },
   getUser: (req, res, next) => {
     const userId = req.params.id
+    const currentUser = req.user.id
+
     return Promise.all([
       User.findByPk(userId, { raw: true }),
       Comment.findAndCountAll({
@@ -52,11 +54,14 @@ const userController = {
       .then(([user, comments]) => {
         if (!user) throw new Error("User didn't exist!")
 
-        return res.render('users/profile', { user, comments })
+        return res.render('users/profile', { user, comments, currentUser })
       })
       .catch(err => next(err))
   },
   editUser: (req, res, next) => {
+    // 驗證是否為登入之 user
+    if (Number(req.params.id) !== req.user.id) throw new Error('無權限查看此頁面！')
+
     return User.findByPk(req.params.id, { raw: true })
       .then(user => {
         if (!user) throw new Error("User didn't exist!")
@@ -66,6 +71,9 @@ const userController = {
       .catch(err => next(err))
   },
   putUser: (req, res, next) => {
+    // 驗證是否為登入之 user
+    if (Number(req.params.id) !== req.user.id) throw new Error('無權限編輯此資料！')
+
     const { name } = req.body
     if (!name) throw new Error('User name is required!')
 

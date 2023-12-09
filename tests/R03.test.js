@@ -31,7 +31,7 @@ describe('# R03', () => {
       // 開始測試
       it(' GET /users/:id ', async () => {
         // 模擬 request & response & next
-        const req = mockRequest({ params: { id: 1 } }) // 帶入 params.id = 1，對 GET /users/1 發出請求
+        const req = mockRequest({ params: { id: 1 }, user: {id: 1} }) // 帶入 params.id = 1，對 GET /users/1 發出請求
         const res = mockResponse()
         const next = mockNext
 
@@ -76,7 +76,7 @@ describe('# R03', () => {
 
       it(' GET /users/:id/edit ', async () => {
         // 模擬 request & response & next
-        const req = mockRequest({ params: { id: 1 } }) // 帶入 params.id = 1，對 GET /users/1/edit 發出請求
+        const req = mockRequest({ params: { id: 1 }, user: {id: 1} }) // 帶入 params.id = 1，對 GET /users/1/edit 發出請求
         const res = mockResponse()
         const next = mockNext
 

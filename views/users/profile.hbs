@@ -9,7 +9,9 @@
         <h5 class="card-title mb-3">{{user.name}}</h5>
         <p class="card-text">{{user.email}}</p>
         <p class="card-text">{{comments.count}} 已評論餐廳</p>
+        {{#ifCond user.id currentUser}}
         <a href="/users/{{user.id}}/edit" class="btn btn-primary mt-5">edit</a>
+        {{/ifCond}}
       </div>
     </div>
   </div>

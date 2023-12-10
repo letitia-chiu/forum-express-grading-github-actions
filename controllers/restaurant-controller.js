@@ -1,4 +1,4 @@
-const { Restaurant, Category, Comment, User } = require('../models')
+const { Restaurant, Category, Comment, User, Favorite } = require('../models')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
 
 const restaurantController = {
@@ -26,10 +26,12 @@ const restaurantController = {
     ])
       .then(([restaurants, categories]) => {
         const favoritedRestaurantsId = req.user && req.user.FavoritedRestaurants.map(fr => fr.id)
+        const likedRestaurantsId = req.user && req.user.LikedRestaurants.map(lr => lr.id)
         const data = restaurants.rows.map(r => ({
           ...r,
           description: r.description.substring(0, 50),
-          isFavorited: favoritedRestaurantsId.includes(r.id)
+          isFavorited: favoritedRestaurantsId.includes(r.id),
+          isLiked: likedRestaurantsId.includes(r.id)
         }))
         return res.render('restaurants', {
           restaurants: data,
@@ -56,9 +58,12 @@ const restaurantController = {
         const isFavorited = req.user.FavoritedRestaurants.some(fr => fr.id === restaurant.id)
         // 此處 isFavorite 處理方法與教案不同，教案採用 include User 資料，比對 restaurant.FavoritedUsers 是否包含登入之使用者。但考量到既然 passport 中已經夾帶 user.FavoritedRestaurants，直接比對此處資料是否包含當前餐廳 id，效率應該會更好，故改寫成以上形式。
 
+        const isLiked = req.user.LikedRestaurants.some(lr => lr.id === restaurant.id)
+
         res.render('restaurant', {
           restaurant: restaurant.toJSON(),
-          isFavorited
+          isFavorited,
+          isLiked
         })
       })
       .catch(err => next(err))
@@ -71,14 +76,16 @@ const restaurantController = {
         nest: true,
         include: [Category]
       }),
-      Comment.count({ where: { restaurantId } })
+      Comment.count({ where: { restaurantId } }),
+      Favorite.count({ where: { restaurantId } })
     ])
-      .then(([restaurant, commentCounts]) => {
+      .then(([restaurant, commentCounts, favoriteCounts]) => {
         if (!restaurant) throw new Error("Restaurant didn't exist!")
 
         res.render('dashboard', {
           restaurant,
-          commentCounts
+          commentCounts,
+          favoriteCounts
         })
       })
       .catch(err => next(err))

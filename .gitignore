@@ -1,5 +1,8 @@
 node_modules/
 
+/upload
+/temp
+
 .DS_Store
 .env
 .idea

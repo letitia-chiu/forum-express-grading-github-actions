@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs')
-const { User, Comment, Restaurant } = require('../models')
+const { User, Comment, Restaurant, Favorite } = require('../models')
 const { localFileHandler } = require('../helpers/file-helpers')
 
 const userController = {
@@ -94,6 +94,44 @@ const userController = {
       .then(() => {
         req.flash('success_messages', '使用者資料編輯成功')
         res.redirect(`/users/${req.params.id}`)
+      })
+      .catch(err => next(err))
+  },
+  addFavorite: (req, res, next) => {
+    const userId = req.user.id
+    const { restaurantId } = req.params
+
+    return Promise.all([
+      Restaurant.findByPk(restaurantId),
+      Favorite.findOne({ where: { userId, restaurantId } })
+    ])
+      .then(([restaurant, favorite]) => {
+        if (!restaurant) throw new Error("Restaurant didn't exist!")
+        if (favorite) throw new Error('已經加過最愛')
+
+        return Favorite.create({ userId, restaurantId })
+      })
+      .then(() => {
+        req.flash('success_messages', '成功加入最愛！')
+        res.redirect('back')
+      })
+      .catch(err => next(err))
+  },
+  removeFavorite: (req, res, next) => {
+    return Favorite.findOne({
+      where: {
+        userId: req.user.id,
+        restaurantId: req.params.restaurantId
+      }
+    })
+      .then(favorite => {
+        if (!favorite) throw new Error('此餐廳未加入過最愛')
+
+        return favorite.destroy()
+      })
+      .then(() => {
+        req.flash('success_messages', '已從最愛中移除')
+        res.redirect('back')
       })
       .catch(err => next(err))
   }

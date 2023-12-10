@@ -25,9 +25,11 @@ const restaurantController = {
       Category.findAll({ raw: true })
     ])
       .then(([restaurants, categories]) => {
+        const favoritedRestaurantsId = req.user && req.user.FavoritedRestaurants.map(fr => fr.id)
         const data = restaurants.rows.map(r => ({
           ...r,
-          description: r.description.substring(0, 50)
+          description: r.description.substring(0, 50),
+          isFavorited: favoritedRestaurantsId.includes(r.id)
         }))
         return res.render('restaurants', {
           restaurants: data,
@@ -50,8 +52,14 @@ const restaurantController = {
 
         return restaurant.increment('viewCounts')
       })
-      .then(incrementResult => {
-        res.render('restaurant', { restaurant: incrementResult.toJSON() })
+      .then(restaurant => {
+        const isFavorited = req.user.FavoritedRestaurants.some(fr => fr.id === restaurant.id)
+        // 此處 isFavorite 處理方法與教案不同，教案採用 include User 資料，比對 restaurant.FavoritedUsers 是否包含登入之使用者。但考量到既然 passport 中已經夾帶 user.FavoritedRestaurants，直接比對此處資料是否包含當前餐廳 id，效率應該會更好，故改寫成以上形式。
+
+        res.render('restaurant', {
+          restaurant: restaurant.toJSON(),
+          isFavorited
+        })
       })
       .catch(err => next(err))
   },

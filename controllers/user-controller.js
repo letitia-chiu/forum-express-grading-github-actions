@@ -171,6 +171,22 @@ const userController = {
         req.flash('success_messages', '已從喜歡的餐廳移除')
         res.redirect('back')
       })
+  },
+  getTopUsers: (req, res, next) => {
+    return User.findAll({
+      include: [{ model: User, as: 'Followers' }]
+    })
+      .then(users => {
+        users = users.map(user => ({
+          ...user.toJSON(),
+          followerCount: user.Followers.length,
+          isFollowed: req.user.Followings.some(f => f.id === user.id)
+        }))
+        // users = users.sort((a, b) => b.followerCount - a.followerCount)
+
+        res.render('top-users', { users })
+      })
+      .catch(err => next(err))
   }
 }
 

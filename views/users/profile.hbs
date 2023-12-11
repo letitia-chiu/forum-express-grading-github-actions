@@ -1,7 +1,12 @@
 <div class="card mb-3" >
   <div class="row g-0">
     <div class="col-md-4">
-      <img src="{{user.image}}" class="img-fluid rounded-start" alt="...">
+      {{#if user.image}}
+        <img src="{{user.image}}" width="500px" height="500x" class="img-fluid rounded-start" alt="...">
+      {{else}}
+        <img src="/images/avatars/no-user-image.jpeg" width="500px" height="500x" class="img-fluid rounded-start" alt="no user image">
+      {{/if}}
+      
     </div>
 
     <div class="col-md-8">

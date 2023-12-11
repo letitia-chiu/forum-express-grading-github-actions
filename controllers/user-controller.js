@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs')
-const { User, Comment, Restaurant, Favorite, Like } = require('../models')
+const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../models')
 const { localFileHandler } = require('../helpers/file-helpers')
 
 const userController = {
@@ -177,14 +177,62 @@ const userController = {
       include: [{ model: User, as: 'Followers' }]
     })
       .then(users => {
-        users = users.map(user => ({
+        const result = users.map(user => ({
           ...user.toJSON(),
           followerCount: user.Followers.length,
           isFollowed: req.user.Followings.some(f => f.id === user.id)
         }))
-        // users = users.sort((a, b) => b.followerCount - a.followerCount)
+          .sort((a, b) => b.followerCount - a.followerCount)
 
-        res.render('top-users', { users })
+        res.render('top-users', { users: result, currentUserId: req.user.id })
+      })
+      .catch(err => next(err))
+  },
+  addFollowing: (req, res, next) => {
+    const { userId } = req.params
+
+    // 自行追加：驗證追蹤對象是否為登入之使用者（不能自己追蹤自己）
+    if (Number(userId) === req.user.id) throw new Error("You can't follow yourself")
+
+    return Promise.all([
+      User.findByPk(userId),
+      Followship.findOne({
+        where: {
+          followerId: req.user.id,
+          followingId: userId
+        }
+      })
+    ])
+      .then(([user, followship]) => {
+        if (!user) throw new Error("User didn't exist!")
+        if (followship) throw new Error("You've already followed this user!")
+
+        return Followship.create({
+          followerId: req.user.id,
+          followingId: userId
+        })
+      })
+      .then(() => {
+        req.flash('success_messages', '成功加入追蹤！')
+        res.redirect('back')
+      })
+      .catch(err => next(err))
+  },
+  removeFollow: (req, res, next) => {
+    return Followship.findOne({
+      where: {
+        followerId: req.user.id,
+        followingId: req.params.userId
+      }
+    })
+      .then(followship => {
+        if (!followship) throw new Error("You haven't followed this user!")
+
+        return followship.destroy()
+      })
+      .then(() => {
+        req.flash('success_messages', '已取消追蹤')
+        res.redirect('back')
       })
       .catch(err => next(err))
   }

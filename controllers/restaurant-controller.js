@@ -111,32 +111,23 @@ const restaurantController = {
       .catch(err => next(err))
   },
   getTopRestaurants: (req, res, next) => {
-    return Favorite.findAll({
+    return Restaurant.findAll({
       attributes: [
-        [sequelize.fn('COUNT', sequelize.literal('Favorite.id')), 'favoritedCount']
+        'id',
+        'name',
+        'image',
+        'description',
+        [sequelize.literal('(SELECT COUNT(`id`) FROM favorites WHERE favorites.restaurant_id = Restaurant.id)'), 'favoritedCount']
       ],
-      include: [{
-        model: Restaurant,
-        attributes: ['id', 'name', 'image', 'description'],
-        right: true
-      }],
-      group: [
-        'Restaurant.id',
-        'Restaurant.name',
-        'Restaurant.image',
-        'Restaurant.description'
-      ],
-      order: [['favoritedCount', 'DESC'], [sequelize.literal('Restaurant.id'), 'ASC']],
+      order: [[sequelize.literal('favoritedCount'), 'DESC'], ['id', 'ASC']],
       limit: 10,
-      nest: true,
       raw: true
     })
-      .then(top10 => {
-        const result = top10.map(i => ({
-          ...i.Restaurant,
-          description: i.Restaurant.description.length > 100 ? i.Restaurant.description.substring(0, 100) + '...' : i.Restaurant.description,
-          favoritedCount: i.favoritedCount,
-          isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === i.Restaurant.id)
+      .then(restaurants => {
+        const result = restaurants.map(r => ({
+          ...r,
+          description: r.description.length > 100 ? r.description.substring(0, 100) + '...' : r.description,
+          isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === r.id)
         }))
 
         res.render('top-restaurants', { restaurants: result })

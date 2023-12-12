@@ -1,4 +1,5 @@
-const { sequelize, Restaurant, Category, Comment, User, Favorite } = require('../models')
+const { Restaurant, Category, Comment, User, Favorite } = require('../models')
+const { Op } = require('sequelize')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
 
 const restaurantController = {
@@ -111,33 +112,61 @@ const restaurantController = {
       .catch(err => next(err))
   },
   getTopRestaurants: (req, res, next) => {
-    return Favorite.findAll({
-      attributes: [
-        [sequelize.fn('COUNT', sequelize.literal('Favorite.id')), 'favoritedCount']
-      ],
-      include: [{
-        model: Restaurant,
-        attributes: ['id', 'name', 'image', 'description'],
-        right: true
-      }],
-      group: [
-        'Restaurant.id',
-        'Restaurant.name',
-        'Restaurant.image',
-        'Restaurant.description'
-      ],
-      order: [['favoritedCount', 'DESC'], [sequelize.literal('Restaurant.id'), 'ASC']],
-      limit: 10,
-      nest: true,
+    return Favorite.findAndCountAll({
+      group: ['restaurantId'],
+      attributes: ['restaurantId'],
       raw: true
     })
-      .then(top10 => {
-        const result = top10.map(i => ({
-          ...i.Restaurant,
-          description: i.Restaurant.description.length > 100 ? i.Restaurant.description.substring(0, 100) + '...' : i.Restaurant.description,
-          favoritedCount: i.favoritedCount,
-          isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === i.Restaurant.id)
+      .then(favorites => {
+        // 若沒有餐廳被收藏，則以瀏覽次數排前10名
+        if (!favorites) {
+          return Restaurant.findAll({
+            order: [['viewCounts', 'DESC'], ['id', 'ASC']],
+            limit: 10,
+            raw: true
+          })
+        }
+
+        const favoritedIds = favorites.count.map(f => f.restaurantId)
+
+        // 若被收藏過的餐廳數不滿 10 間
+        if (favorites.count.length < 10) {
+          return Promise.all([
+            Restaurant.findAll({
+              where: { id: { [Op.in]: favoritedIds } },
+              raw: true
+            }),
+            favorites.count,
+            Restaurant.findAll({
+              where: { id: { [Op.notIn]: favoritedIds } },
+              order: [['viewCounts', 'DESC'], ['id', 'ASC']],
+              limit: 10 - favorites.count.length,
+              raw: true
+            })
+          ])
+
+        // 若被收藏過的餐廳數達 10 間
+        } else {
+          return Promise.all([
+            Restaurant.findAll({
+              where: { id: { [Op.in]: favoritedIds } },
+              raw: true
+            }),
+            favorites.count
+          ])
+        }
+      })
+      .then(([rests1, favorites, rests2]) => {
+        const restaurants = rests2 ? [...rests1, ...rests2] : rests1
+        const result = restaurants.map(r => ({
+          ...r,
+          description: r.description.length > 100 ? r.description.substring(0, 100) + '...' : r.description,
+          isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === r.id),
+          favoritedCount: favorites.find(f => f.restaurantId === r.id) ? favorites.find(f => f.restaurantId === r.id).count : 0
         }))
+          .sort((a, b) => a.id - b.id)
+          .sort((a, b) => b.viewCounts - a.viewCounts)
+          .sort((a, b) => b.favoritedCount - a.favoritedCount)
 
         res.render('top-restaurants', { restaurants: result })
       })

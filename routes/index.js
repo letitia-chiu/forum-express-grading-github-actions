@@ -48,7 +48,10 @@ router.delete('/like/:restaurantId', authenticated, userController.removeLike)
 router.post('/following/:userId', authenticated, userController.addFollowing)
 router.delete('/following/:userId', authenticated, userController.removeFollow)
 
-router.use('/', (req, res) => res.redirect('/restaurants'))
+router.use('/', (req, res) => {
+  console.log('========== Use / ==========') // 此處有莫名重新導向之未解bug，為方便檢查先保留
+  res.redirect('/restaurants')
+})
 router.use('/', generalErrorHandler)
 
 module.exports = router

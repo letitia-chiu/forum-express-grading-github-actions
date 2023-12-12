@@ -1,4 +1,4 @@
-const { Restaurant, Category, Comment, User, Favorite } = require('../models')
+const { sequelize, Restaurant, Category, Comment, User, Favorite } = require('../models')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
 
 const restaurantController = {
@@ -111,21 +111,33 @@ const restaurantController = {
       .catch(err => next(err))
   },
   getTopRestaurants: (req, res, next) => {
-    console.log('=========== Top 10 Restaurants ===========')
-    return Restaurant.findAll({
-      include: [
-        { model: User, as: 'FavoritedUsers' }
-      ]
+    return Favorite.findAll({
+      attributes: [
+        [sequelize.fn('COUNT', sequelize.literal('Favorite.id')), 'favoritedCount']
+      ],
+      include: [{
+        model: Restaurant,
+        attributes: ['id', 'name', 'image', 'description'],
+        right: true
+      }],
+      group: [
+        'Restaurant.id',
+        'Restaurant.name',
+        'Restaurant.image',
+        'Restaurant.description'
+      ],
+      order: [['favoritedCount', 'DESC'], [sequelize.literal('Restaurant.id'), 'ASC']],
+      limit: 10,
+      nest: true,
+      raw: true
     })
-      .then(restaurants => {
-        const result = restaurants.map(r => ({
-          ...r.toJSON(),
-          description: r.description.length > 100 ? r.description.substring(0, 100) + '...' : r.description,
-          favoritedCount: r.FavoritedUsers.length,
-          isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === r.id)
+      .then(top10 => {
+        const result = top10.map(i => ({
+          ...i.Restaurant,
+          description: i.Restaurant.description.length > 100 ? i.Restaurant.description.substring(0, 100) + '...' : i.Restaurant.description,
+          favoritedCount: i.favoritedCount,
+          isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === i.Restaurant.id)
         }))
-          .sort((a, b) => b.favoritedCount - a.favoritedCount)
-          .slice(0, 10)
 
         res.render('top-restaurants', { restaurants: result })
       })

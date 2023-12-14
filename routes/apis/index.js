@@ -13,10 +13,12 @@ const restController = require('../../controllers/apis/restaurant-controller')
 
 // const { authenticated, authenticatedAdmin } = require('../../middleware/auth')
 
-// const { generalErrorHandler } = require('../../middleware/error-handler')
+const { apiErrorHandler } = require('../../middleware/error-handler')
 
 router.use('/admin', admin)
 
 router.get('/restaurants', restController.getRestaurants)
+
+router.use('/', apiErrorHandler)
 
 module.exports = router

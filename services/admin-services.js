@@ -107,9 +107,9 @@ const adminServices = {
 
         return restaurant.destroy()
       })
-      .then(() => {
+      .then(deletedRestaurant => {
         req.flash('success_messages', 'restaurant was successfully deleted')
-        return cb(null)
+        return cb(null, { restaurant: deletedRestaurant })
       })
       .catch(err => cb(err))
   },

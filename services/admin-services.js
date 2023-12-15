@@ -26,19 +26,25 @@ const adminServices = {
 
     const { file } = req
 
-    localFileHandler(file)
-      .then(filePath => Restaurant.create({
-        name,
-        tel,
-        address,
-        openingHours,
-        description,
-        image: filePath || null,
-        categoryId
-      }))
-      .then(() => {
-        req.flash('success_messages', 'restaurant was successfully created!')
-        return cb(null)
+    return Promise.all([
+      Category.findByPk(categoryId),
+      localFileHandler(file)
+    ])
+      .then(([category, filePath]) => {
+        if (!category) throw new Error("Category didn't exist!")
+
+        return Restaurant.create({
+          name,
+          tel,
+          address,
+          openingHours,
+          description,
+          image: filePath || null,
+          categoryId
+        })
+      })
+      .then(newRestaurant => {
+        return cb(null, { restaurant: newRestaurant })
       })
       .catch(err => cb(err))
   },

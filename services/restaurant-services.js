@@ -27,7 +27,7 @@ const restaurantServices = {
       .then(([restaurants, categories]) => {
         const data = restaurants.rows.map(r => ({
           ...r,
-          description: r.description.substring(0, 50),
+          description: r.description ? r.description.substring(0, 50) : null,
           isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === r.id),
           isLiked: req.user && req.user.LikedRestaurants.some(lr => lr.id === r.id)
         }))

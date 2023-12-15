@@ -8,7 +8,12 @@ const adminController = {
     adminServices.createRestaurant(req, (err, data) => err ? next(err) : res.render('admin/create-restaurant', data))
   },
   postRestaurant: (req, res, next) => {
-    adminServices.postRestaurant(req, (err, data) => err ? next(err) : res.redirect('/admin/restaurants'))
+    adminServices.postRestaurant(req, (err, data) => {
+      if (err) return next(err)
+
+      req.flash('success_messages', 'restaurant was successfully created!')
+      res.redirect('/admin/restaurants')
+    })
   },
   getRestaurant: (req, res, next) => {
     adminServices.getRestaurant(req, (err, data) => err ? next(err) : res.render('admin/restaurant', data))

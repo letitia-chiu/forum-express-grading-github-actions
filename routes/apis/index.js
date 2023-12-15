@@ -11,15 +11,15 @@ const userController = require('../../controllers/apis/user-controller')
 
 // const upload = require('../../middleware/multer')
 
-// const { authenticated, authenticatedAdmin } = require('../../middleware/auth')
+const { authenticated, authenticatedAdmin } = require('../../middleware/apiAuth')
 
 const { apiErrorHandler } = require('../../middleware/error-handler')
 
-router.use('/admin', admin)
+router.use('/admin', authenticated, authenticatedAdmin, admin)
+
+router.get('/restaurants', authenticated, restController.getRestaurants)
 
 router.post('/signin', passport.authenticate('local', { session: false }), userController.signIn)
-
-router.get('/restaurants', restController.getRestaurants)
 
 router.use('/', apiErrorHandler)
 

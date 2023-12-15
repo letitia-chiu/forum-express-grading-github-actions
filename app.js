@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
+
 const path = require('path')
 
 const express = require('express')
@@ -14,7 +18,6 @@ const { pages, apis } = require('./routes')
 
 const app = express()
 
-require('dotenv').config()
 const port = process.env.PORT || 3000
 
 app.engine('hbs', handlebars({ extname: '.hbs', helpers: handlebarsHelpers }))

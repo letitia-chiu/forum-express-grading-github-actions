@@ -46,7 +46,7 @@ passport.use(new JwtStrategy(jwtOptions, (jwtPayload, cb) => {
       { model: User, as: 'Followings' }
     ]
   })
-    .then(user => cb(null, user))
+    .then(user => cb(null, user.toJSON()))
     .catch(err => cb(err))
 }))
 

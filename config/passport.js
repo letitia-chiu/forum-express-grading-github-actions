@@ -20,10 +20,19 @@ passport.use(new LocalStrategy(
   (req, email, password, cb) => {
     User.findOne({ where: { email } })
       .then(user => {
-        if (!user) return cb(null, false, req.flash('error_messages', '帳號或密碼輸入錯誤！'))
+        // if (!user) return cb(null, false, req.flash('error_messages', '帳號或密碼輸入錯誤！'))
+        // 和 jwt 登入驗證共用時，無法處理 req.flash，故改回傳錯誤訊息由 error-handler 處理
+        if (!user) {
+          const errMsg = '帳號或密碼輸入錯誤！'
+          return cb(errMsg, false)
+        }
 
         bcrypt.compare(password, user.password).then(res => {
-          if (!res) return cb(null, false, req.flash('error_messages', '帳號或密碼輸入錯誤！'))
+          // if (!res) cb(null, false, req.flash('error_messages', '帳號或密碼輸入錯誤！'))
+          if (!res) {
+            const errMsg = '帳號或密碼輸入錯誤！'
+            return cb(errMsg, false)
+          }
 
           return cb(null, user)
         })

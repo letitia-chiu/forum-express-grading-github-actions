@@ -22,7 +22,12 @@ const adminController = {
     adminServices.editRestaurant(req, (err, data) => err ? next(err) : res.render('admin/edit-restaurant', data))
   },
   putRestaurant: (req, res, next) => {
-    adminServices.postRestaurant(req, (err, data) => err ? next(err) : res.redirect('/admin/restaurants'))
+    adminServices.putRestaurant(req, (err, data) => {
+      if (err) return next(err)
+
+      req.flash('success_messages', 'restaurant was successfully updated!')
+      res.redirect(`/admin/restaurants/${req.params.id}`)
+    })
   },
   deleteRestaurant: (req, res, next) => {
     adminServices.deleteRestaurant(req, (err, data) => err ? next(err) : res.redirect('/admin/restaurants'))
@@ -31,7 +36,12 @@ const adminController = {
     adminServices.getUsers(req, (err, data) => err ? next(err) : res.render('admin/users', data))
   },
   patchUser: (req, res, next) => {
-    adminServices.patchUser(req, (err, data) => err ? next(err) : res.redirect('/admin/users'))
+    adminServices.patchUser(req, (err, data) => {
+      if (err) return next(err)
+
+      req.flash('success_messages', '權限更變成功！')
+      res.redirect('/admin/users')
+    })
   }
 }
 

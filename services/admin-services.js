@@ -23,6 +23,7 @@ const adminServices = {
   postRestaurant: (req, cb) => {
     const { name, tel, address, openingHours, description, categoryId } = req.body
     if (!name) throw new Error('Restaurant name is required!')
+    if (!categoryId) throw new Error('Category is required!')
 
     const { file } = req
 
@@ -80,15 +81,18 @@ const adminServices = {
   putRestaurant: (req, cb) => {
     const { name, tel, address, openingHours, description, categoryId } = req.body
     if (!name) throw new Error('Restaurant name is required!')
+    if (!categoryId) throw new Error('Category is required!')
 
     const { file } = req
 
     Promise.all([
       Restaurant.findByPk(req.params.id),
+      Category.findByPk(categoryId),
       localFileHandler(file)
     ])
-      .then(([restaurant, filePath]) => {
+      .then(([restaurant, category, filePath]) => {
         if (!restaurant) throw new Error("Restaurant didn't exist!")
+        if (!category) throw new Error("Category didn't exist!")
 
         return restaurant.update({
           name,
@@ -100,9 +104,8 @@ const adminServices = {
           categoryId
         })
       })
-      .then(() => {
-        req.flash('success_messages', 'restaurant was successfully updated')
-        return cb(null)
+      .then(updatedRestaurant => {
+        return cb(null, { restaurant: updatedRestaurant })
       })
       .catch(err => cb(err))
   },
@@ -120,7 +123,10 @@ const adminServices = {
       .catch(err => cb(err))
   },
   getUsers: (req, cb) => {
-    return User.findAll({ raw: true })
+    return User.findAll({
+      attributes: { exclude: ['password'] },
+      raw: true
+    })
       .then(users => {
         return cb(null, { users })
       })
@@ -130,16 +136,14 @@ const adminServices = {
     return User.findByPk(req.params.id)
       .then(user => {
         if (!user) throw new Error("User didn't exist!")
-        if (user.email === 'root@example.com') {
-          req.flash('error_messages', '禁止變更 root 權限')
-          return cb(null)
-        }
+        if (user.email === 'root@example.com') throw new Error('禁止變更 root 權限')
 
         return user.update({ isAdmin: !user.isAdmin })
       })
-      .then(() => {
-        req.flash('success_messages', '使用者權限變更成功')
-        return cb(null)
+      .then(updatedUser => {
+        const userData = updatedUser.toJSON()
+        delete userData.password
+        return cb(null, { user: userData })
       })
       .catch(err => cb(err))
   }

@@ -22,6 +22,8 @@ router.get('/restaurants', authenticated, restController.getRestaurants)
 router.post('/signup', userController.signUp)
 router.post('/signin', passport.authenticate('local', { session: false }), userController.signIn)
 
+router.post('/logout', authenticated, userController.logout)
+
 router.get('/users/top', authenticated, userController.getTopUsers)
 router.get('/users/:id', authenticated, userController.getUser)
 router.put('/users/:id', upload.single('image'), authenticated, userController.putUser)

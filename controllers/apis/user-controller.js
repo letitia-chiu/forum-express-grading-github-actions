@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const { Token } = require('../../models')
 const userServices = require('../../services/user-services')
 
 const userController = {
@@ -9,14 +10,37 @@ const userController = {
     try {
       const userData = req.user.toJSON()
       delete userData.password
-      const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '30d' })
-      return res.json({
-        status: 'success',
-        data: { token, user: userData }
-      })
+      const newToken = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '30d' })
+
+      return Token.findOne({ where: { userId: userData.id } })
+        .then(token => {
+          // 若有舊的 token 存在，則更新
+          if (token) return token.update({ token: newToken })
+
+          // 若無舊的 token 則加入
+          return Token.create({ token: newToken, userId: userData.id })
+        })
+        .then(() => {
+          return res.json({
+            status: 'success',
+            data: { token: newToken, user: userData }
+          })
+        })
     } catch (err) {
       next(err)
     }
+  },
+  logout: (req, res, next) => {
+    return Token.findOne({ where: { userId: req.user.id } })
+      .then(token => {
+        if (!token) throw new Error("Token didn't exist")
+
+        return token.destroy()
+      })
+      .then(deletedToken => {
+        const data = { user: req.user }
+        return res.json({ status: 'success', data })
+      })
   },
   getUser: (req, res, next) => {
     userServices.getUser(req, (err, data) => err ? next(err) : res.json({ status: 'success', data }))

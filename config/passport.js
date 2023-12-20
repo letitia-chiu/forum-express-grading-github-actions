@@ -3,9 +3,9 @@ const LocalStrategy = require('passport-local')
 const passportJWT = require('passport-jwt')
 const bcrypt = require('bcryptjs')
 
-const { User, Restaurant } = require('../models')
+const { User, Restaurant, Token } = require('../models')
 
-const ExtractJwt = passportJWT.ExtractJwt
+// const ExtractJwt = passportJWT.ExtractJwt
 const JwtStrategy = passportJWT.Strategy
 
 // set up Passport strategy
@@ -41,21 +41,53 @@ passport.use(new LocalStrategy(
 ))
 
 // JWT setting
+// const jwtOptions = {
+//   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+//   secretOrKey: process.env.JWT_SECRET,
+// }
+
+// 客製化 jwtFromRequest 以取得原始 token 字串
 const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.JWT_SECRET
+  jwtFromRequest: function (req) {
+    let token = null
+    if (req && req.headers.authorization) {
+      // 取得並拆分 req.headers.authorization (應為'Bearer [token字串]')
+      const parts = req.headers.authorization.split(' ')
+
+      // 確認正確拆分成 'Bearer' 與 token 兩個部分
+      if (parts.length === 2 && /^Bearer$/i.test(parts[0])) {
+        // 將原始 token 字串放入 req.tokenString
+        token = parts[1]
+        req.tokenString = token
+      } else {
+        throw new Error('The type of authentication scheme is not Bearer')
+      }
+    }
+    return token
+  },
+  secretOrKey: process.env.JWT_SECRET,
+  passReqToCallback: true
 }
 
-passport.use(new JwtStrategy(jwtOptions, (jwtPayload, cb) => {
-  User.findByPk(jwtPayload.id, {
-    include: [
-      { model: Restaurant, as: 'FavoritedRestaurants' },
-      { model: Restaurant, as: 'LikedRestaurants' },
-      { model: User, as: 'Followers' },
-      { model: User, as: 'Followings' }
-    ]
-  })
-    .then(user => cb(null, user.toJSON()))
+passport.use(new JwtStrategy(jwtOptions, (req, jwtPayload, cb) => {
+  Promise.all([
+    Token.findOne({ where: { token: req.tokenString, userId: jwtPayload.id } }),
+    User.findByPk(jwtPayload.id, {
+      include: [
+        { model: Restaurant, as: 'FavoritedRestaurants' },
+        { model: Restaurant, as: 'LikedRestaurants' },
+        { model: User, as: 'Followers' },
+        { model: User, as: 'Followings' }
+      ]
+    })
+  ])
+    .then(([token, user]) => {
+      if (!token) throw new Error()
+
+      const userData = user.toJSON()
+      delete userData.password
+      return cb(null, userData)
+    })
     .catch(err => cb(err))
 }))
 

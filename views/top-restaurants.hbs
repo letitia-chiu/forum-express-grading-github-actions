@@ -5,13 +5,13 @@
 
 <div class="container d-flex flex-column align-items-center">
 
-{{#each restaurants}}
+  {{#each restaurants}}
   <div class="card mb-3" style="width: 540px; display: block;">
     <div class="row g-0">
 
       {{!-- Restaurant Image --}}
       <div class="col-md-4">
-        <img src="{{this.image}}" class="img-fluid rounded-start" alt="image: {{this.name}}">
+        <img src="{{this.image}}" class="img-fluid rounded-start" alt="image: {{this.Restaurant.name}}">
       </div>
 
       <div class="col-md-8">
@@ -24,6 +24,7 @@
 
           {{!-- Favorited Counts --}}
           <span class="bg-secondary badge">收藏數：{{this.favoritedCount}}</span>
+          <span class="bg-secondary badge">瀏覽數：{{this.viewCounts}}</span>
 
           {{!-- Description --}}
           <p class="card-text">
@@ -36,20 +37,20 @@
 
             {{!-- Add / Remove Favorite --}}
             {{#if isFavorited}}
-              <form action="/favorite/{{this.id}}?_method=DELETE" method="POST">
-                <button type="submit" class="btn btn-danger m-1">移除最愛</button>
-              </form>
+            <form action="/favorite/{{this.id}}?_method=DELETE" method="POST">
+              <button type="submit" class="btn btn-danger m-1">移除最愛</button>
+            </form>
             {{else}}
-              <form action="/favorite/{{this.id}}" method="POST">
-                <button type="submit" class="btn btn-primary m-1">加到最愛</button>
-              </form>
+            <form action="/favorite/{{this.id}}" method="POST">
+              <button type="submit" class="btn btn-primary m-1">加到最愛</button>
+            </form>
             {{/if}}
           </div>
-          
+
         </div>
       </div>
     </div>
   </div>
-{{/each}}
+  {{/each}}
 
 </div>

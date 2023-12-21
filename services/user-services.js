@@ -1,11 +1,17 @@
 const bcrypt = require('bcryptjs')
+const validator = require('validator')
 
 const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../models')
 const { localFileHandler } = require('../helpers/file-helpers')
 
 const userServices = {
   signUp: (req, cb) => {
-    if (req.body.password !== req.body.passwordCheck) throw new Error('Passwords do not match!')
+    const { name, email, password, passwordCheck } = req.body
+
+    if (!name || name.trim().length === 0) throw new Error('User name is required!')
+    if (!validator.isEmail(email)) throw new Error('Please enter the correct email!')
+    if (!password || password.trim().length === 0) throw new Error('Password is required!')
+    if (password !== passwordCheck) throw new Error('Passwords do not match!')
 
     User.findOne({ where: { email: req.body.email } })
       .then(user => {

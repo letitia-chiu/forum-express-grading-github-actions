@@ -45,7 +45,10 @@ const restaurantServices = {
     return Restaurant.findByPk(req.params.id, {
       include: [
         Category,
-        { model: Comment, include: User }
+        {
+          model: Comment,
+          include: [{ model: User, attributes: { exclude: ['password'] } }]
+        }
       ]
     })
       .then(restaurant => {
@@ -99,7 +102,10 @@ const restaurantServices = {
       Comment.findAll({
         limit: 10,
         order: [['createdAt', 'DESC']],
-        include: [User, Restaurant],
+        include: [
+          { model: User, attributes: { exclude: ['password'] } },
+          Restaurant
+        ],
         raw: true,
         nest: true
       })

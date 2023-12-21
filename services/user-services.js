@@ -36,7 +36,10 @@ const userServices = {
     const currentUser = req.user.id
 
     return Promise.all([
-      User.findByPk(userId, { raw: true }),
+      User.findByPk(userId, {
+        attributes: { exclude: ['password'] },
+        raw: true
+      }),
       Comment.findAndCountAll({
         where: { userId },
         include: { model: Restaurant, attributes: ['id', 'image'] },
@@ -56,7 +59,7 @@ const userServices = {
     if (Number(req.params.id) !== req.user.id) throw new Error('Permission denied!')
 
     const { name } = req.body
-    if (!name) throw new Error('User name is required!')
+    if (!name || name.trim().length === 0) throw new Error('User name is required!')
 
     const { file } = req
 
@@ -153,7 +156,8 @@ const userServices = {
   },
   getTopUsers: (req, cb) => {
     return User.findAll({
-      include: [{ model: User, as: 'Followers' }]
+      attributes: { exclude: ['password'] },
+      include: [{ model: User, attributes: { exclude: ['password'] }, as: 'Followers' }]
     })
       .then(users => {
         const result = users.map(user => ({

@@ -94,14 +94,15 @@ npm run start
 當 Terminal 出現以下字樣，即代表伺服器啟動成功：  
 `Example app running on http://localhost:3000`  
 現在，您可開啟任一瀏覽器輸入 http://localhost:3000 來使用餐廳清單網頁。  
+  
 種子資料提供以下兩組帳號密碼可使用：
 - 帳號 1（有管理者權限）：root@example.com / 密碼：12345678
 - 帳號 2（一般用戶）：user1@example.com / 密碼：12345678
 
-7. API 操作相關說明
-本專案提供 API 版本，路由說明請見 [餐廳論壇API文件](https://reurl.cc/dLV4pz) 
-進行各項 API 功能操作前，需先透過 `POST /api/signin` 進行登入。
-Request body：
+7. API 操作相關說明  
+本專案提供 API 版本，路由說明請見 [餐廳論壇API文件](https://reurl.cc/dLV4pz)   
+進行各項 API 功能操作前，需先透過 `POST /api/signin` 進行登入。  
+Request body：  
 ```
 {
     "email": "[使用者帳號]",
@@ -118,10 +119,10 @@ Request body：
     }
 }
 ```
-請保存使用者 token，操作其他 API 時須以此 token 進行 Bearer Token authorization。
-Token 有效期限為 30 天，，可透過 `POST /api/logout` 進行登出來主動使其失效。
-登入產生之 token 紀錄將保存於資料庫的 `Token` 資料表中，
-請注意若刪除資料表中對應之 token 資料也會無法使用該 token 登入。
+請保存使用者 token，操作其他 API 時須以此 token 進行 Bearer Token authorization。  
+Token 有效期限為 30 天，可透過 `POST /api/logout` 進行登出來主動使其失效。  
+登入產生之 token 紀錄將保存於資料庫的 `Token` 資料表中，  
+請注意若刪除資料表中對應之 token 資料也會無法使用該 token 登入。  
 
 
 ## 使用工具 (Tools)
@@ -135,5 +136,5 @@ Token 有效期限為 30 天，，可透過 `POST /api/logout` 進行登出來�
 - JWT驗證套件：[jsonwebtoken v8.5.1](https://www.npmjs.com/package/jsonwebtoken)
 
 ## 開發者 (Contributor)
-[ALPHA Camp (上游專案)](https://github.com/ALPHACamp/forum-express-grading.git)
+[ALPHA Camp (上游專案)](https://github.com/ALPHACamp/forum-express-grading.git)  
 [Letitia Chiu](https://github.com/letitia-chiu)

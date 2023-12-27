@@ -13,11 +13,15 @@ const categoryServices = {
       .catch(err => cb(err))
   },
   postCategory: (req, cb) => {
-    console.log(req.body)
     const { name } = req.body
     if (!name) throw new Error('Category name is required!')
 
-    return Category.create({ name })
+    return Category.findOne({ where: { name } })
+      .then(category => {
+        if (category) throw new Error('Category name already existed!')
+
+        return Category.create({ name })
+      })
       .then(newCategory => {
         return cb(null, { category: newCategory })
       })
@@ -27,11 +31,15 @@ const categoryServices = {
     const { name } = req.body
     if (!name) throw new Error('Category name is required!')
 
-    return Category.findByPk(req.params.id)
-      .then(category => {
-        if (!category) throw new Error("Category didn't exist!")
+    return Promise.all([
+      Category.findByPk(req.params.id),
+      Category.findOne({ where: { name } })
+    ])
+      .then(([editCategory, existedCategory]) => {
+        if (!editCategory) throw new Error("Category didn't exist!")
+        if (existedCategory && existedCategory.name === name) throw new Error('Category name already existed!')
 
-        return category.update({ name })
+        return editCategory.update({ name })
       })
       .then(updatedCategory => {
         return cb(null, { category: updatedCategory })
